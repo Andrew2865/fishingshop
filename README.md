@@ -45,7 +45,7 @@ Kliknij bazę sklep_wedkarski → Tools → Query Tool
 
 File → Open… i wybierz sklep_wedkarski.sql
 
-Kliknij Execute (▶)
+Klikamy Execute 
 
 Po chwili powinny pojawić się tabele w:
 Schemas → public → Tables
