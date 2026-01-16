@@ -24,7 +24,7 @@ W katalogu `backend` uruchom polecenia:
 npm install
 node server.js
 
-W katalogu frontend uruchom polecenia:
+W katalogu `frontend` uruchom polecenia:
 
 npm install
 npm start
