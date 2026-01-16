@@ -28,3 +28,24 @@ W katalogu `frontend` uruchom polecenia:
 
 npm install
 npm start
+
+pgAdmin 
+
+Otwórz pgAdmin i połącz się z serwerem (np. PostgreSQL 16).
+
+Utwieramy bazę danych:
+
+PPM na Databases → Create → Database…
+
+Nazwa np. sklep_wedkarski (albo jaką masz w projekcie)
+
+Import pliku .sql:
+
+Kliknij bazę sklep_wedkarski → Tools → Query Tool
+
+File → Open… i wybierz sklep_wedkarski.sql
+
+Kliknij Execute (▶)
+
+Po chwili powinny pojawić się tabele w:
+Schemas → public → Tables
