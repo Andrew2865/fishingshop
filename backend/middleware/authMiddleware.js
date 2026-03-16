@@ -4,8 +4,6 @@ import pool from '../config/db.js';
 
 dotenv.config();
 
-// Uwaga: rola w JWT może się zdezaktualizować, jeśli zmienisz role w bazie.
-// Dlatego po weryfikacji tokena pobieramy aktualnego użytkownika z DB.
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -16,7 +14,7 @@ export const protect = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // { id, role, iat, exp }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const result = await pool.query(
       'SELECT id, role FROM users WHERE id=$1',
@@ -36,6 +34,20 @@ export const protect = async (req, res, next) => {
 
 export const admin = (req, res, next) => {
   if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Brak dostępu' });
+  }
+  next();
+};
+
+export const warehouse = (req, res, next) => {
+  if (!req.user || req.user.role !== 'warehouse') {
+    return res.status(403).json({ error: 'Brak dostępu' });
+  }
+  next();
+};
+
+export const adminOrWarehouse = (req, res, next) => {
+  if (!req.user || !['admin', 'warehouse'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Brak dostępu' });
   }
   next();

@@ -28,6 +28,18 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+
+
+        <div className="col-12 col-md-6 col-lg-4">
+          <div className="card shadow-sm h-100">
+            <div className="card-body">
+              <h5 className="card-title">Zamówienia</h5>
+              <p className="text-muted small">Podgląd wszystkich zamówień, zmiana statusu i numeru przesyłki.</p>
+              <Link className="btn btn-success" to="/admin/orders">Zarządzaj zamówieniami</Link>
+            </div>
+          </div>
+        </div>
+
         <div className="col-12 col-md-6 col-lg-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">

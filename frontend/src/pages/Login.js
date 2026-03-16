@@ -14,7 +14,10 @@ export default function Login() {
     try {
       const res = await login({ email, password });
       localStorage.setItem('token', res.data.token);
-      navigate('/');
+      const role = res.data?.user?.role;
+      if (role === 'warehouse') navigate('/warehouse');
+      else if (role === 'admin') navigate('/admin');
+      else navigate('/');
     } catch (err) {
       setError('Niepoprawny email lub hasło.');
     }

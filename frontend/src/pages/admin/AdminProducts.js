@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { createProduct, deleteProduct, getProductsAdmin, updateProduct, uploadProductImage } from '../../services/products';
+import { createProduct, deleteProduct, getProductsAdmin, updateProduct, uploadProductImage, uploadProductGalleryImages, deleteProductGalleryImage } from '../../services/products';
 import { getCategories } from '../../services/categories';
 
-function imgSrc(url) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `http://localhost:5000${url}`;
-}
+import { buildImageUrl } from '../../config';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -28,7 +25,8 @@ export default function AdminProducts() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({});
   const [uploadingId, setUploadingId] = useState(null);
-   const [uploadFile, setUploadFile] = useState(null);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
 
   const resetAlerts = () => { setMsg(''); setErr(''); };
 
@@ -48,7 +46,7 @@ export default function AdminProducts() {
 }, []);
 
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const catMap = useMemo(() => {
     const m = new Map();
@@ -76,6 +74,7 @@ export default function AdminProducts() {
     setEditId(null);
     setForm({});
     setUploadFile(null);
+    setGalleryFiles([]);
     setUploadingId(null);
   };
 
@@ -150,6 +149,34 @@ export default function AdminProducts() {
       setUploadingId(null);
     }
   };
+  const onGalleryUpload = async () => {
+    resetAlerts();
+    if (!galleryFiles.length || !editId) return setErr('Wybierz zdjęcia galerii i produkt.');
+    setUploadingId(editId);
+    try {
+      await uploadProductGalleryImages(editId, galleryFiles);
+      setMsg('Zdjęcia galerii dodane.');
+      setGalleryFiles([]);
+      setUploadingId(null);
+      load();
+    } catch (e2) {
+      setErr(e2?.response?.data?.error || 'Nie udało się wgrać galerii.');
+      setUploadingId(null);
+    }
+  };
+
+  const onDeleteGalleryImage = async (productId, imageId) => {
+    resetAlerts();
+    if (!window.confirm('Usunąć zdjęcie z galerii?')) return;
+    try {
+      await deleteProductGalleryImage(productId, imageId);
+      setMsg('Zdjęcie galerii usunięte.');
+      load();
+    } catch (e2) {
+      setErr(e2?.response?.data?.error || 'Nie udało się usunąć zdjęcia galerii.');
+    }
+  };
+
 
   return (
     <div className="container mt-4">
@@ -238,7 +265,7 @@ export default function AdminProducts() {
                       <div className="d-flex align-items-center gap-2">
                         {p.image_url ? (
                           <img
-                            src={imgSrc(p.image_url)}
+                            src={buildImageUrl(p.image_url)}
                             alt={p.name}
                             style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8 }}
                           />
@@ -269,17 +296,42 @@ export default function AdminProducts() {
                       </div>
 
                       {editId === p.id ? (
-                        <div className="mt-2 d-flex align-items-center gap-2 flex-wrap">
-                          <input
-                            type="file"
-                            className="form-control form-control-sm"
-                            accept="image/png,image/jpeg,image/webp"
-                            onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                            style={{ maxWidth: 260 }}
-                          />
-                          <button className="btn btn-outline-dark btn-sm" type="button" onClick={onUpload} disabled={uploadingId === p.id}>
-                            {uploadingId === p.id ? 'Wgrywanie…' : 'Wgraj zdjęcie'}
-                          </button>
+                        <div className="mt-2">
+                          <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
+                            <input
+                              type="file"
+                              className="form-control form-control-sm"
+                              accept="image/png,image/jpeg,image/webp"
+                              onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                              style={{ maxWidth: 260 }}
+                            />
+                            <button className="btn btn-outline-dark btn-sm" type="button" onClick={onUpload} disabled={uploadingId === p.id}>
+                              {uploadingId === p.id ? 'Wgrywanie…' : 'Wgraj zdjęcie główne'}
+                            </button>
+                          </div>
+
+                          <div className="small text-muted mb-1">Galeria produktu</div>
+                          <div className="d-flex gap-2 flex-wrap mb-2">
+                            {Array.isArray(p.images) && p.images.filter((img) => !img.is_main).length > 0 ? p.images.filter((img) => !img.is_main).map((img) => (
+                              <div key={img.id} className="position-relative">
+                                <img src={buildImageUrl(img.image_url)} alt={p.name} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8 }} />
+                                <button type="button" className="btn btn-danger btn-sm position-absolute top-0 end-0 translate-middle p-0" style={{ width: 20, height: 20, lineHeight: '18px' }} onClick={() => onDeleteGalleryImage(p.id, img.id)}>×</button>
+                              </div>
+                            )) : <span className="text-muted small">Brak dodatkowych zdjęć</span>}
+                          </div>
+                          <div className="d-flex align-items-center gap-2 flex-wrap">
+                            <input
+                              type="file"
+                              multiple
+                              className="form-control form-control-sm"
+                              accept="image/png,image/jpeg,image/webp"
+                              onChange={(e) => setGalleryFiles(Array.from(e.target.files || []))}
+                              style={{ maxWidth: 320 }}
+                            />
+                            <button className="btn btn-outline-secondary btn-sm" type="button" onClick={onGalleryUpload} disabled={uploadingId === p.id}>
+                              {uploadingId === p.id ? 'Wgrywanie…' : 'Dodaj do galerii'}
+                            </button>
+                          </div>
                         </div>
                       ) : null}
                     </td>

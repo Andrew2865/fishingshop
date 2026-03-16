@@ -1,11 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../services/api';
-
-function imgSrc(url) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `http://localhost:5000${url}`;
-}
+import { buildImageUrl } from '../config';
 
 function Price({ price, old_price }) {
   const p = Number(price || 0).toFixed(2);
@@ -22,11 +18,13 @@ function Price({ price, old_price }) {
 export default function Home() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
   useEffect(() => {
     const load = async () => {
       setErr('');
+      setLoading(true);
       try {
         const [cRes, pRes] = await Promise.all([
           API.get('/categories'),
@@ -36,20 +34,21 @@ export default function Home() {
         setProducts(Array.isArray(pRes.data) ? pRes.data : []);
       } catch (e) {
         setErr('Nie udało się pobrać danych ze sklepu. Sprawdź czy backend działa.');
+      } finally {
+        setLoading(false);
       }
     };
     load();
   }, []);
 
-  const promo = useMemo(() => products.filter(p => p.is_promo).slice(0, 6), [products]);
-  const featured = useMemo(() => products.filter(p => p.is_featured).slice(0, 6), [products]);
+  const promo = useMemo(() => products.filter((p) => p.is_promo).slice(0, 6), [products]);
+  const featured = useMemo(() => products.filter((p) => p.is_featured).slice(0, 6), [products]);
   const newest = useMemo(() => [...products].slice(0, 6), [products]);
 
   return (
     <div className="container mt-4">
       {err ? <div className="alert alert-warning">{err}</div> : null}
 
-      {/* Hero */}
       <div className="p-4 p-md-5 bg-dark text-white rounded-4 shadow-sm">
         <div className="row align-items-center g-4">
           <div className="col-12 col-lg-7">
@@ -75,20 +74,21 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Categories */}
       <div className="d-flex align-items-center justify-content-between mt-4 mb-2">
         <h3 className="mb-0">Kategorie</h3>
         <Link className="small text-decoration-none" to="/products">Zobacz wszystkie →</Link>
       </div>
 
+      {loading ? <div className="alert alert-light border">Ładowanie kategorii i polecanych produktów…</div> : null}
+
       <div className="row g-3">
         {categories.map((cat) => (
           <div className="col-12 col-sm-6 col-lg-3" key={cat.id}>
-            <Link to={`/products?category=${cat.id}`} className="text-decoration-none">
+            <Link to={`/products?category_id=${cat.id}`} className="text-decoration-none">
               <div className="card shadow-sm h-100">
                 {cat.image_url ? (
                   <img
-                    src={imgSrc(cat.image_url)}
+                    src={buildImageUrl(cat.image_url)}
                     alt={cat.name}
                     className="card-img-top"
                     style={{ height: 140, objectFit: 'cover' }}
@@ -104,26 +104,21 @@ export default function Home() {
             </Link>
           </div>
         ))}
-        {!err && categories.length === 0 ? (
+        {!loading && !err && categories.length === 0 ? (
           <div className="col-12">
-            <div className="alert alert-secondary mb-0">Brak kategorii w bazie danych. Dodaj dane seedem.</div>
+            <div className="alert alert-secondary mb-0">Brak kategorii w bazie danych.</div>
           </div>
         ) : null}
       </div>
 
-      {/* Promo */}
-      <SectionProducts title="Promocje" products={promo} emptyText="Brak produktów promocyjnych." />
-
-      {/* Featured */}
-      <SectionProducts title="Polecane" products={featured} emptyText="Brak produktów wyróżnionych." />
-
-      {/* Newest */}
-      <SectionProducts title="Nowości" products={newest} emptyText="Brak produktów." />
+      <SectionProducts title="Promocje" products={promo} emptyText="Brak produktów promocyjnych." loading={loading} />
+      <SectionProducts title="Polecane" products={featured} emptyText="Brak produktów wyróżnionych." loading={loading} />
+      <SectionProducts title="Nowości" products={newest} emptyText="Brak produktów." loading={loading} />
     </div>
   );
 }
 
-function SectionProducts({ title, products, emptyText }) {
+function SectionProducts({ title, products, emptyText, loading }) {
   return (
     <>
       <div className="d-flex align-items-center justify-content-between mt-4 mb-2">
@@ -131,7 +126,9 @@ function SectionProducts({ title, products, emptyText }) {
         <Link className="small text-decoration-none" to="/products">Zobacz więcej →</Link>
       </div>
 
-      {products.length === 0 ? (
+      {loading ? (
+        <div className="alert alert-light border">Ładowanie sekcji „{title.toLowerCase()}”…</div>
+      ) : products.length === 0 ? (
         <div className="alert alert-secondary">{emptyText}</div>
       ) : (
         <div className="row g-3">
@@ -140,7 +137,7 @@ function SectionProducts({ title, products, emptyText }) {
               <div className="card shadow-sm h-100">
                 {p.image_url ? (
                   <img
-                    src={imgSrc(p.image_url)}
+                    src={buildImageUrl(p.image_url)}
                     alt={p.name}
                     className="card-img-top"
                     style={{ height: 180, objectFit: 'cover' }}
@@ -157,9 +154,12 @@ function SectionProducts({ title, products, emptyText }) {
                     <Price price={p.price} old_price={p.old_price} />
                   </div>
 
-                  <div className="mt-auto pt-3">
-                    <Link className="btn btn-outline-primary btn-sm w-100" to="/products">
-                      Zobacz w sklepie
+                  <div className="mt-auto pt-3 d-grid gap-2">
+                    <Link className="btn btn-primary btn-sm w-100" to={`/products/${p.id}`}>
+                      Zobacz produkt
+                    </Link>
+                    <Link className="btn btn-outline-primary btn-sm w-100" to={`/products?category_id=${p.category_id || ''}`}>
+                      Więcej w tej kategorii
                     </Link>
                   </div>
                 </div>

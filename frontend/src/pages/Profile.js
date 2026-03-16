@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMe, updateMe, changePassword } from '../services/user';
 import { getOrderHistory } from '../services/orders';
 import API from '../services/api';
+import { buildImageUrl } from '../config';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -293,7 +294,7 @@ function Overview({ me }) {
             <div className="d-flex align-items-center gap-3 mb-3">
               {me?.avatar_url ? (
                 <img
-                  src={me.avatar_url.startsWith('http') ? me.avatar_url : `http://localhost:5000${me.avatar_url}`}
+                  src={buildImageUrl(me.avatar_url)}
                   alt={me?.name || 'avatar'}
                   style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }}
                 />
@@ -389,7 +390,7 @@ function OrdersPanel({ loading, orders }) {
                                 <div className="d-flex align-items-center gap-2">
                                   {it.image_url ? (
                                     <img
-                                      src={it.image_url.startsWith('http') ? it.image_url : `http://localhost:5000${it.image_url}`}
+                                      src={buildImageUrl(it.image_url)}
                                       alt={it.name}
                                       style={{ width: 42, height: 42, objectFit: 'cover', borderRadius: 8 }}
                                     />
