@@ -1,6 +1,5 @@
 import pool from '../config/db.js';
 
-
 function normalizeOptionalString(value) {
   if (value === undefined) return undefined;
   const trimmed = String(value || '').trim();
@@ -98,7 +97,7 @@ export const getProducts = async (req, res) => {
     const { category_id, category, q, sort, page, page_size, limit } = req.query;
 
     const params = [];
-    const where = ['is_active = true'];
+    const where = ['COALESCE(is_active, true) = true'];
     const normalizedCategoryId = category_id ?? category;
 
     if (normalizedCategoryId) {
@@ -187,9 +186,6 @@ export const getProductById = async (req, res) => {
     ]);
     res.json({ ...product, images: gallery, reviews });
   } catch (err) {
-    if (err?.code === '42P01') {
-      return res.status(500).json({ error: 'Brakuje tabel product_reviews lub product_images w bazie danych.' });
-    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -200,9 +196,6 @@ export const getProductReviews = async (req, res) => {
     const payload = await getProductReviewsPayload(id);
     res.json(payload);
   } catch (err) {
-    if (err?.code === '42P01') {
-      return res.status(500).json({ error: 'Brakuje tabel product_reviews lub product_images w bazie danych.' });
-    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -217,7 +210,7 @@ export const addOrUpdateProductReview = async (req, res) => {
       return res.status(400).json({ error: 'Ocena musi być liczbą od 1 do 5.' });
     }
 
-    const productRes = await pool.query('SELECT id FROM products WHERE id=$1 AND is_active=true', [id]);
+    const productRes = await pool.query('SELECT id FROM products WHERE id=$1 AND COALESCE(is_active, true)=true', [id]);
     if (productRes.rows.length === 0) {
       return res.status(404).json({ error: 'Produkt nie istnieje.' });
     }
@@ -234,9 +227,6 @@ export const addOrUpdateProductReview = async (req, res) => {
     const payload = await getProductReviewsPayload(id);
     res.json({ review: result.rows[0], reviews: payload });
   } catch (err) {
-    if (err?.code === '42P01') {
-      return res.status(500).json({ error: 'Brakuje tabeli product_reviews w bazie danych.' });
-    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -442,9 +432,6 @@ export const addProductGalleryImages = async (req, res) => {
     const gallery = await getProductGallery(id, productRes.rows[0].image_url);
     res.json({ items: inserted, gallery });
   } catch (err) {
-    if (err?.code === '42P01') {
-      return res.status(500).json({ error: 'Brakuje tabeli product_images w bazie danych.' });
-    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -463,9 +450,6 @@ export const deleteProductGalleryImage = async (req, res) => {
     const gallery = await getProductGallery(id, productRes.rows[0]?.image_url || null);
     res.json({ success: true, gallery });
   } catch (err) {
-    if (err?.code === '42P01') {
-      return res.status(500).json({ error: 'Brakuje tabeli product_images w bazie danych.' });
-    }
     res.status(500).json({ error: err.message });
   }
 };

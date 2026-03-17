@@ -1,3 +1,4 @@
+
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -5,20 +6,15 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const productsDir = path.join(__dirname, '..', 'public', 'images', 'products');
-
-if (!fs.existsSync(productsDir)) {
-  fs.mkdirSync(productsDir, { recursive: true });
-}
+const destinationDir = path.join(__dirname, '..', 'public', 'images', 'products');
+fs.mkdirSync(destinationDir, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, productsDir);
-  },
+  destination: (req, file, cb) => cb(null, destinationDir),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname || '').toLowerCase();
     const safeExt = ['.png', '.jpg', '.jpeg', '.webp'].includes(ext) ? ext : '.png';
-    cb(null, `product_${req.params.id}_${Date.now()}${safeExt}`);
+    cb(null, `product_${req.params.id || 'new'}_${Date.now()}_${Math.round(Math.random()*1e6)}${safeExt}`);
   },
 });
 
@@ -27,15 +23,11 @@ const fileFilter = (req, file, cb) => {
   cb(ok ? null : new Error('Dozwolone są tylko pliki PNG/JPG/WEBP'), ok);
 };
 
-export const uploadProductImage = multer({
+const options = {
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
+  limits: { fileSize: 5 * 1024 * 1024 },
+};
 
-
-export const uploadProductGalleryImages = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024, files: 8 },
-});
+export const uploadProductImage = multer(options);
+export const uploadProductGalleryImages = multer(options);

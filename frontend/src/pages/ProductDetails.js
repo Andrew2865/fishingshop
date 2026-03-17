@@ -129,7 +129,7 @@ export default function ProductDetails() {
     const gallery = Array.isArray(product?.images) ? product.images : [];
     if (gallery.length > 0) return gallery;
     return product?.image_url ? [{ id: `main-${product.id}`, image_url: product.image_url, is_main: true }] : [];
-  }, [product]);
+  }, []);
 
   const user = useMemo(() => {
     try {
@@ -137,7 +137,7 @@ export default function ProductDetails() {
     } catch {
       return null;
     }
-  }, [product]);
+  }, []);
 
   const userReview = useMemo(() => {
     const reviews = Array.isArray(product?.reviews?.items) ? product.reviews.items : [];

@@ -31,7 +31,8 @@ export default function Home() {
           API.get('/products'),
         ]);
         setCategories(Array.isArray(cRes.data) ? cRes.data : []);
-        setProducts(Array.isArray(pRes.data) ? pRes.data : []);
+        const normalizedProducts = Array.isArray(pRes.data?.items) ? pRes.data.items : (Array.isArray(pRes.data) ? pRes.data : []);
+        setProducts(normalizedProducts);
       } catch (e) {
         setErr('Nie udało się pobrać danych ze sklepu. Sprawdź czy backend działa.');
       } finally {
