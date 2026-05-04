@@ -52,7 +52,14 @@ export default function WarehouseOrders() {
         tracking_number: order.tracking_number || null,
       });
       patchLocal(order.id, res.data);
-      setMsg(`Zamówienie #${order.id} zapisane.`);
+      const mail = res?.data?.mail;
+      if (mail?.sent) {
+        setMsg(`Zamówienie #${order.id} zapisane. E-mail do klienta został wysłany.`);
+      } else if (mail && !mail.sent && !mail.skipped) {
+        setMsg(`Zamówienie #${order.id} zapisane, ale nie udało się wysłać e-maila.`);
+      } else {
+        setMsg(`Zamówienie #${order.id} zapisane.`);
+      }
     } catch (e) {
       setErr(e?.response?.data?.error || 'Nie udało się zapisać zmian w zamówieniu.');
     } finally {

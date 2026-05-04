@@ -7,6 +7,20 @@ function canSendMail() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
+let transporterCache = null;
+function getTransporter() {
+  if (!canSendMail()) return null;
+  if (!transporterCache) {
+    transporterCache = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+  }
+  return transporterCache;
+}
+
 function shippingPrice(method) {
   const m = String(method || '').toLowerCase();
   const prices = {
@@ -178,8 +192,8 @@ export const createOrder = async (req, res) => {
       [order.id]
     );
 
-    await sendOrderEmail(order.customer_email || u.email, order, itemsRes.rows).catch(() => {});
-    res.json({ success: true, order });
+    const mail = await sendOrderEmail(order.customer_email || u.email, order, itemsRes.rows).catch((e) => ({ sent: false, reason: e.message }));
+    res.json({ success: true, order, mail });
   } catch (err) {
     await pool.query('ROLLBACK').catch(() => {});
     res.status(500).json({ error: err.message });
@@ -263,8 +277,8 @@ export const createGuestOrder = async (req, res) => {
       [order.id]
     );
 
-    await sendOrderEmail(snapshot.customer_email, order, itemsRes.rows).catch(() => {});
-    res.json({ success: true, order });
+    const mail = await sendOrderEmail(snapshot.customer_email, order, itemsRes.rows).catch((e) => ({ sent: false, reason: e.message }));
+    res.json({ success: true, order, mail });
   } catch (err) {
     await pool.query('ROLLBACK').catch(() => {});
     res.status(500).json({ error: err.message });
@@ -331,7 +345,28 @@ export const updateOrderAdmin = async (req, res) => {
       [nextStatus, nextTracking, nextHandledBy, nextShippedAt, nextCompletedAt, id]
     );
 
-    res.json(result.rows[0]);
+    const updatedOrder = result.rows[0];
+    let mail = { sent: false, skipped: true, reason: 'status-not-changed' };
+    const shouldSend = current.status !== updatedOrder.status || current.tracking_number !== updatedOrder.tracking_number;
+
+    if (shouldSend) {
+      const itemsRes = await pool.query(
+        `SELECT oi.product_id, oi.quantity, oi.price, p.name
+         FROM order_items oi
+         JOIN products p ON p.id = oi.product_id
+         WHERE oi.order_id = $1
+         ORDER BY oi.id`,
+        [updatedOrder.id]
+      );
+
+      try {
+        mail = await sendOrderEmail(updatedOrder.customer_email, updatedOrder, itemsRes.rows);
+      } catch (e) {
+        mail = { sent: false, reason: e.message };
+      }
+    }
+
+    res.json({ ...updatedOrder, mail });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
