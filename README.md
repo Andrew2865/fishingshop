@@ -14,7 +14,8 @@ Do uruchomienia projektu lokalnie wymagane są następujące narzędzia:
 
 - **PostgreSQL**
 - **pgAdmin**
-- **Node.js** wraz z menedżerem pakietów **npm**
+- [Node.js](https://nodejs.org/en/download) oraz dodatkowe pakiety npm (instalacje można wybrać w instalatorze Node.js)
+- [Java JDK](https://www.oracle.com/java/technologies/downloads/)
 
 Wszystkie potrzebne biblioteki i frameworki zostaną zainstalowane automatycznie po uruchomieniu polecenia `npm install`.
 
