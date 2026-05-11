@@ -2,50 +2,38 @@
 
 Projekt wykonany w ramach pracy inżynierskiej.
 
+## Opis projektu
+
+**Fishingshop** to aplikacja internetowa sklepu wędkarskiego, przygotowana jako projekt inżynierski.
+
+Aplikacja składa się z części frontendowej oraz backendowej. Backend odpowiada za obsługę logiki aplikacji i komunikację z bazą danych, natomiast frontend umożliwia użytkownikowi korzystanie z aplikacji przez interfejs graficzny.
+
 ## Wymagania systemowe
 
-Do uruchomienia projektu wymagane są następujące narzędzia:
-- PostgreSQL  
-- Node.js (wraz z menedżerem pakietów npm)
+Do uruchomienia projektu lokalnie wymagane są następujące narzędzia:
 
-Wszystkie niezbędne biblioteki i frameworki zostaną zainstalowane automatycznie podczas instalacji zależności.
+- **PostgreSQL**
+- **pgAdmin**
+- **Node.js** wraz z menedżerem pakietów **npm**
 
-## Uruchomienie projektu
+Wszystkie potrzebne biblioteki i frameworki zostaną zainstalowane automatycznie po uruchomieniu polecenia `npm install`.
 
-1. Sklonuj repozytorium na komputer lokalny.
-2. Otwórz dwa okna wiersza poleceń (CMD lub terminal):
-   - jedno w katalogu `backend`
-   - drugie w katalogu `frontend`
+## Przygotowanie bazy danych
 
-### Backend
+1. Otwórz **pgAdmin**.
+2. Połącz się z serwerem PostgreSQL, na przykład **PostgreSQL 16**.
+3. Utwórz nową bazę danych:
+   - kliknij prawym przyciskiem myszy na **Databases**,
+   - wybierz **Create → Database…**,
+   - wpisz nazwę bazy, na przykład `sklep_wedkarski`,
+   - zatwierdź utworzenie bazy danych.
 
-W katalogu `backend` uruchom polecenia:
+## Import pliku SQL
 
-npm install
-node server.js
+1. Kliknij utworzoną bazę danych, na przykład `sklep_wedkarski`.
+2. Wybierz **Tools → Query Tool**.
+3. W górnym menu wybierz **File → Open…**.
+4. Wskaż plik:
 
-W katalogu `frontend` uruchom polecenia:
-
-npm install
-npm start
-
-pgAdmin 
-
-Otwórz pgAdmin i połącz się z serwerem (np. PostgreSQL 16).
-
-Utwieramy bazę danych:
-
-PPM na Databases → Create → Database…
-
-Nazwa np. sklep_wedkarski (albo jaką masz w projekcie)
-
-Import pliku .sql:
-
-Kliknij bazę sklep_wedkarski → Tools → Query Tool
-
-File → Open… i wybierz sklep_wedkarski.sql
-
-Klikamy Execute 
-
-Po chwili powinny pojawić się tabele w:
-Schemas → public → Tables
+```bash
+sklep_wedkarski.sql
