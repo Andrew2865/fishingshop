@@ -12,7 +12,7 @@ Aplikacja składa się z części frontendowej oraz backendowej. Backend odpowia
 
 Do uruchomienia projektu lokalnie wymagane są następujące narzędzia:
 
-- **PostgreSQL**
+- [PostgreSQL](https://www.postgresql.org/download/)
 - **pgAdmin**
 - [Node.js](https://nodejs.org/en/download) oraz dodatkowe pakiety npm (instalacje można wybrać w instalatorze Node.js)
 - [Java JDK](https://www.oracle.com/java/technologies/downloads/)
